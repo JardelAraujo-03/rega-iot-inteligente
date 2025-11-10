@@ -21,14 +21,14 @@ interface NovaConfigForm {
 // --- Configuração do Firebase ---
 // *** ATUALIZE com as credenciais do seu projeto ***
 const firebaseConfig = {
-    apiKey: "AIzaSyBx2ndKOX8-5YWBvb798Gn5S5mmymTBEU4",
+    apiKey: "AXzaXXSyBXXX2ndKXXXXOX8-5XXXXXYWBvb7XXX",
     authDomain: "rega-iot.firebaseapp.com",
     // Corrigido para usar o ID do projeto
     databaseURL: "https://rega-iot-default-rtdb.firebaseio.com", 
     projectId: "rega-iot",
     storageBucket: "rega-iot.firebasestorage.app",
-    messagingSenderId: "750772681941",
-    appId: "1:750772681941:web:11864cc5138d6d7f2bf65c"
+    messagingSenderId: "715022772333",
+    appId: "1:7A50BB772CCC:web:1186DDDD4ccCCC51BB3A8d"
 };
 
 // Inicializa o Firebase e o RTDB
