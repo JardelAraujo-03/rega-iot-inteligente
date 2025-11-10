@@ -1,1 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💧 Controle de Rega IoT (Avançado)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Rega Inteligente IoT</h1>
+        <div id="status-conexao" class="status-box status-connecting">
+            <span class="icon">📡</span> Aguardando Conexão IoT...
+        </div>
 
+        <div class="lcd-display">
+            <p id="lcd-line-0" class="line-0">Sistema de Rega</p>
+            <p id="lcd-line-1" class="line-1">Inicializando...</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card umidade">
+                <h2>Umidade do Solo</h2>
+                <p id="umidade-valor">--</p>
+                <div class="umidade-bar-container"><div id="umidade-bar" class="umidade-bar"></div></div>
+            </div>
+
+            <div class="info-card horario">
+                <h2>Horário Atual (NTP)</h2>
+                <p id="horario-atual">--:--</p>
+                <p id="periodo-proibido" class="status-off">Regando Liberada</p>
+            </div>
+
+            <div class="info-card rele">
+                <h2>Estado da Bomba</h2>
+                <p id="status-rele" class="status-off">DESLIGADA</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="config-section">
+            <h2>⚙️ Configurações Online</h2>
+            <form id="config-form">
+                <div class="form-group">
+                    <label for="umidade-min">Umidade Mínima para Rega (%)</label>
+                    <input type="number" id="umidade-min" min="0" max="100" value="25" required>
+                </div>
+                <div class="form-group">
+                    <label for="intervalo-rega">Intervalo Mínimo entre Regas (minutos)</label>
+                    <input type="number" id="intervalo-rega" min="1" value="60" required>
+                </div>
+                <button type="submit" class="btn-save">Salvar Configurações</button>
+            </form>
+            <p id="config-message" class="message-success"></p>
+        </div>
+
+        <div class="log-container">
+            <h2>Registro de Atividades</h2>
+            <ul id="log-list"></ul>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+</html>
