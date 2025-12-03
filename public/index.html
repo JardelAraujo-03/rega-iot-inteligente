@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Rega IoT Dashboard</title>
+
+  <!-- TAILWIND -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- HERO ICONS -->
+  <script src="https://unpkg.com/feather-icons"></script>
+
+  <!-- CHART.JS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { background: #f3f6fa; }
+  </style>
+</head>
+
+<body class="min-h-screen p-4 dark:bg-gray-900 dark:text-gray-100">
+  
+  <!-- TÍTULO -->
+  <h1 class="text-3xl font-bold mb-6 text-center">🌱 Rega IoT - Painel Inteligente</h1>
+
+  <!-- GRID PRINCIPAL -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+
+    <!-- CARD UMIDADE -->
+    <div id="card-umidade"
+         class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow border-l-4 border-blue-500">
+      <h2 class="font-bold text-lg flex items-center gap-2">
+        <i data-feather="droplet"></i> Umidade do Solo
+      </h2>
+      <p id="umidadeTexto" class="text-4xl mt-2 font-bold">--%</p>
+    </div>
+
+    <!-- CARD BOMBA -->
+    <div class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow border-l-4 border-green-500">
+      <h2 class="font-bold text-lg flex items-center gap-2">
+        <i data-feather="power"></i> Bomba
+      </h2>
+      <p id="bombaTexto" class="text-4xl mt-2 font-bold">--</p>
+    </div>
+
+    <!-- CARD ÚLTIMA REGA -->
+    <div class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow border-l-4 border-purple-500">
+      <h2 class="font-bold text-lg flex items-center gap-2">
+        <i data-feather="clock"></i> Última Rega
+      </h2>
+      <p id="ultimaRegaTexto" class="text-xl mt-2 font-bold">--</p>
+    </div>
+
+    <!-- CARD ERRO SENSOR -->
+    <div id="cardErroSensor"
+         class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow border-l-4 border-red-600 hidden">
+      <h2 class="font-bold text-lg flex items-center gap-2 text-red-500">
+        <i data-feather="alert-triangle"></i> Erro no Sensor
+      </h2>
+      <p class="text-lg mt-2">A rega automática está bloqueada.</p>
+    </div>
+
+  </div>
+
+
+  <!-- GRÁFICO -->
+  <div class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow mb-6">
+    <h2 class="text-xl font-bold mb-2">📈 Gráfico da Umidade</h2>
+    <canvas id="grafico"></canvas>
+  </div>
+
+
+  <!-- WIDGET CLIMA -->
+  <div class="p-5 bg-white dark:bg-gray-800 rounded-xl shadow">
+    <h2 class="text-xl font-bold mb-3">☀️ Previsão do Tempo</h2>
+    <p id="climaTemp" class="text-3xl font-bold mb-1">--°C</p>
+    <p id="climaDesc" class="text-lg mb-1">--</p>
+    <p id="climaVento" class="text-sm opacity-70">--</p>
+  </div>
+
+
+  <script type="module">
+
+    /* -------------------- FIREBASE -------------------- */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBx2ndKOX8-5YWBvb798Gn5S5mmymTBEU4",
+      authDomain: "rega-iot.firebaseapp.com",
+      databaseURL: "https://rega-iot-default-rtdb.firebaseio.com",
+      projectId: "rega-iot",
+      storageBucket: "rega-iot.appspot.com",
+      messagingSenderId: "750772681941",
+      appId: "1:750772681941:web:11864cc5138d6d7f2bf65c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    /* ------------------ GRÁFICO ------------------ */
+    const ctx = document.getElementById("grafico").getContext("2d");
+    const grafico = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Umidade (%)",
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37,99,235,0.2)",
+          data: [],
+          tension: 0.3
+        }]
+      },
+      options: { scales: { y: { min: 0, max: 100 } } }
+    });
+
+    /* ------------------ DADOS EM TEMPO REAL ------------------ */
+    onValue(ref(db, "/sensor/lastReading"), snap => {
+      const d = snap.val();
+      if (!d) return;
+
+      // UI
+      document.getElementById("umidadeTexto").innerHTML = `${d.umidade}%`;
+      document.getElementById("bombaTexto").innerHTML = d.regando ? "Ligada" : "Desligada";
+      document.getElementById("ultimaRegaTexto").innerHTML =
+        new Date(d.ultimaRega).toLocaleTimeString("pt-BR");
+
+      // Erro sensor
+      const cardErro = document.getElementById("cardErroSensor");
+      if (d.erroSensor) cardErro.classList.remove("hidden");
+      else cardErro.classList.add("hidden");
+
+      // GRÁFICO
+      const hora = new Date().toLocaleTimeString("pt-BR");
+      grafico.data.labels.push(hora);
+      grafico.data.datasets[0].data.push(d.umidade);
+      if (grafico.data.labels.length > 40) {
+        grafico.data.labels.shift();
+        grafico.data.datasets[0].data.shift();
+      }
+      grafico.update();
+    });
+
+    /* ------------------ WIDGET CLIMA ------------------ */
+    fetch("https://api.open-meteo.com/v1/forecast?latitude=-23.55&longitude=-46.63&current_weather=true")
+      .then(r => r.json())
+      .then(c => {
+        document.getElementById("climaTemp").innerHTML = `${c.current_weather.temperature}°C`;
+        document.getElementById("climaVento").innerHTML = `Vento: ${c.current_weather.windspeed} km/h`;
+        document.getElementById("climaDesc").innerHTML = "Tempo atual";
+      });
+
+    feather.replace();
+  </script>
+
+</body>
+</html>
