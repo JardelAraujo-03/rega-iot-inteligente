@@ -1,0 +1,27 @@
+{
+  "rules": {
+    // Configurações (Front-end lê/escreve, ESP32 lê)
+    "config": {
+      ".read": true,
+      ".write": "auth != null" // Apenas usuários autenticados (seu Front-end) podem alterar
+    },
+    // Última Leitura (Front-end lê, ESP32 escreve)
+    "sensor": {
+      "lastReading": {
+        ".read": true,
+        ".write": "auth == null" // Permite escrita não autenticada (para o ESP32)
+      },
+      // Histórico de Leituras (Apenas leitura/adicionar no histórico)
+      "leituras": {
+        ".read": true, // Todos podem ler o histórico
+        "$leituraId": {
+          // Permite apenas escrita (POST/PUSH), não permite editar ou apagar
+          ".write": "auth == null && newData.exists()" 
+        }
+      }
+    },
+    // Regra geral de segurança (bloqueia o resto)
+    ".read": false,
+    ".write": false
+  }
+}
